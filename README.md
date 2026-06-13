@@ -34,7 +34,7 @@ carepulse-analytics/
 │   └── pipeline/         # Dagster orchestration
 ├── warehouse/            # dbt project (staging -> intermediate -> marts)
 ├── ml/                   # no-show, churn, medication-adherence risk models
-├── analytics/            # funnel & A/B test analysis
+├── analytics/            # funnel, A/B test, and North Star metric analysis
 ├── dashboard/            # Streamlit app
 └── tests/
 ```
@@ -47,7 +47,7 @@ carepulse-analytics/
 - [x] Phase 3 — dbt marts & Dagster orchestration
 - [x] Phase 4 — Streamlit dashboards
 - [x] Phase 5 — ML risk models (no-show, churn, medication non-adherence)
-- [ ] Phase 6 — Product analytics (funnels, A/B testing, North Star metric)
+- [x] Phase 6 — Product analytics (funnels, A/B testing, North Star metric)
 - [ ] Phase 7 — Polish, CI/CD, deploy
 
 ## License
