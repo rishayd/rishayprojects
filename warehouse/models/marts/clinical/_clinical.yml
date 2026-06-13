@@ -1,0 +1,38 @@
+version: 2
+
+models:
+  - name: fct_appointments
+    description: >
+      One row per scheduled appointment, with boolean flags for no-show,
+      attended, and cancelled outcomes.
+    columns:
+      - name: appointment_id
+        data_tests:
+          - unique
+          - not_null
+      - name: patient_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_patients')
+              field: patient_id
+      - name: status
+        data_tests:
+          - accepted_values:
+              values: ['attended', 'no_show', 'cancelled']
+
+  - name: fct_medication_adherence
+    description: >
+      One row per patient per day with whether medication was taken, for
+      patients with a chronic condition.
+    columns:
+      - name: patient_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_patients')
+              field: patient_id
+      - name: ab_test_group
+        data_tests:
+          - accepted_values:
+              values: ['treatment', 'control']

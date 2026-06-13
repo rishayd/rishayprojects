@@ -1,0 +1,35 @@
+version: 2
+
+models:
+  - name: int_patient_conditions
+    description: >
+      One row per patient summarizing diagnosed conditions (count and a
+      comma-separated list of distinct condition descriptions).
+    columns:
+      - name: patient_id
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              to: ref('stg_patients')
+              field: patient_id
+
+  - name: int_daily_app_activity
+    description: >
+      One row per patient per calendar day with the number of app sessions
+      and total/average session duration for that day.
+    columns:
+      - name: patient_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_patients')
+              field: patient_id
+      - name: session_count
+        data_tests:
+          - accepted_range:
+              min_value: 0
+      - name: total_duration_seconds
+        data_tests:
+          - accepted_range:
+              min_value: 0

@@ -1,0 +1,73 @@
+version: 2
+
+models:
+  - name: dim_patients
+    description: >
+      One row per patient: demographics, engagement segment, chronic
+      condition flag/summary, no-show propensity, adherence baseline, and
+      A/B test cohort assignment.
+    columns:
+      - name: patient_id
+        data_tests:
+          - unique
+          - not_null
+      - name: engagement_segment
+        data_tests:
+          - accepted_values:
+              values: ['highly_engaged', 'moderately_engaged', 'disengaging', 'low_engagement']
+      - name: ab_test_group
+        data_tests:
+          - accepted_values:
+              values: ['treatment', 'control']
+      - name: condition_count
+        data_tests:
+          - accepted_range:
+              min_value: 0
+
+  - name: fct_app_sessions
+    description: One row per app login/session event.
+    columns:
+      - name: patient_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_patients')
+              field: patient_id
+      - name: duration_seconds
+        data_tests:
+          - accepted_range:
+              min_value: 0
+
+  - name: fct_daily_engagement
+    description: >
+      One row per patient per day with session counts/durations for that
+      day, enriched with the patient's engagement segment and A/B cohort.
+    columns:
+      - name: patient_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_patients')
+              field: patient_id
+      - name: session_count
+        data_tests:
+          - accepted_range:
+              min_value: 0
+
+  - name: fct_onboarding_funnel
+    description: >
+      One row per patient with a timestamp for each onboarding funnel step
+      reached and the highest step index completed (0-6).
+    columns:
+      - name: patient_id
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              to: ref('dim_patients')
+              field: patient_id
+      - name: funnel_steps_completed
+        data_tests:
+          - accepted_range:
+              min_value: 0
+              max_value: 6

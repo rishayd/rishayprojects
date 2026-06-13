@@ -1,0 +1,67 @@
+version: 2
+
+models:
+  - name: fct_notifications
+    description: One row per push notification sent, with open status and A/B cohort.
+    columns:
+      - name: patient_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_patients')
+              field: patient_id
+      - name: notification_type
+        data_tests:
+          - accepted_values:
+              values: ['medication_reminder', 'appointment_reminder', 'weekly_check_in']
+      - name: ab_test_group
+        data_tests:
+          - accepted_values:
+              values: ['treatment', 'control']
+
+  - name: mart_adherence_summary
+    description: >
+      Per-patient medication adherence rate, with A/B cohort, for comparing
+      the medication-reminder nudge experiment (treatment vs. control).
+    columns:
+      - name: patient_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_patients')
+              field: patient_id
+      - name: ab_test_group
+        data_tests:
+          - accepted_values:
+              values: ['treatment', 'control']
+      - name: adherence_rate
+        data_tests:
+          - accepted_range:
+              min_value: 0
+              max_value: 1
+
+  - name: mart_appointment_no_show
+    description: >
+      No-show rate by engagement segment and chronic-condition status.
+    columns:
+      - name: no_show_rate
+        data_tests:
+          - accepted_range:
+              min_value: 0
+              max_value: 1
+
+  - name: mart_funnel_conversion
+    description: >
+      Onboarding funnel step conversion counts and rates, overall and by
+      A/B test cohort.
+    columns:
+      - name: step_index
+        data_tests:
+          - accepted_range:
+              min_value: 1
+              max_value: 6
+      - name: conversion_rate
+        data_tests:
+          - accepted_range:
+              min_value: 0
+              max_value: 1
