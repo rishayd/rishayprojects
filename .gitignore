@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# Data
+data/raw/
+data/synthea/
+*.duckdb
+*.csv
+
+# dbt
+warehouse/target/
+warehouse/dbt_packages/
+warehouse/logs/
+
+# Dagster
+.dagster_home/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store

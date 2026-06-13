@@ -1,0 +1,28 @@
+# Core
+python-dotenv
+
+# Warehouse / transformation
+duckdb
+dbt-core
+dbt-duckdb
+
+# Orchestration
+dagster
+dagster-webserver
+
+# Dashboard
+streamlit
+
+# Data science
+pandas
+numpy
+scikit-learn
+xgboost
+shap
+
+# Experimentation / stats
+scipy
+statsmodels
+
+# Testing
+pytest
