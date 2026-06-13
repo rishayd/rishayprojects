@@ -56,6 +56,7 @@ carepulse-analytics/
 - [Data dictionary](docs/data_dictionary.md)
 - [Metric definitions](docs/metrics_definitions.md)
 - [Design decisions & tradeoffs](docs/design_decisions.md)
+- [Project walkthrough](docs/project_walkthrough.md) -- phase-by-phase explanation with rationale and alternatives
 - [Deployment](docs/deployment.md)
 
 ## CI
