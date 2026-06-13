@@ -12,6 +12,7 @@ dagster-webserver
 
 # Dashboard
 streamlit
+plotly
 
 # Data science
 pandas

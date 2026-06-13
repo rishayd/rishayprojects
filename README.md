@@ -45,7 +45,7 @@ carepulse-analytics/
 - [x] Phase 1 — Data foundation (Synthea + app-event simulator)
 - [x] Phase 2 — Ingestion & dbt staging models
 - [x] Phase 3 — dbt marts & Dagster orchestration
-- [ ] Phase 4 — Streamlit dashboards
+- [x] Phase 4 — Streamlit dashboards
 - [ ] Phase 5 — ML risk models (no-show, churn, readmission)
 - [ ] Phase 6 — Product analytics (funnels, A/B testing, North Star metric)
 - [ ] Phase 7 — Polish, CI/CD, deploy
