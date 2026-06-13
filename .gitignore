@@ -6,9 +6,9 @@ venv/
 .env
 
 # Data
-data/raw/
-data/synthea/
+data/
 *.duckdb
+*.duckdb.wal
 *.csv
 
 # dbt

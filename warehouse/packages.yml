@@ -1,0 +1,3 @@
+# No external dbt packages required.
+# Custom generic tests (e.g. accepted_range) live in macros/generic_tests/.
+packages: []

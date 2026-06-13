@@ -1,0 +1,122 @@
+version: 2
+
+models:
+  - name: stg_patients
+    description: One row per patient with demographics and engagement profile.
+    columns:
+      - name: patient_id
+        data_tests:
+          - unique
+          - not_null
+      - name: engagement_segment
+        data_tests:
+          - accepted_values:
+              values: ['highly_engaged', 'moderately_engaged', 'disengaging', 'low_engagement']
+      - name: ab_test_group
+        data_tests:
+          - accepted_values:
+              values: ['treatment', 'control']
+      - name: no_show_propensity
+        data_tests:
+          - accepted_range:
+              min_value: 0
+              max_value: 1
+      - name: adherence_baseline
+        data_tests:
+          - accepted_range:
+              min_value: 0
+              max_value: 1
+
+  - name: stg_conditions
+    description: One row per diagnosed condition per patient.
+    columns:
+      - name: patient_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_patients')
+              field: patient_id
+
+  - name: stg_onboarding_events
+    description: Onboarding funnel step events.
+    columns:
+      - name: patient_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_patients')
+              field: patient_id
+      - name: step
+        data_tests:
+          - accepted_values:
+              values:
+                - 'signup'
+                - 'profile_complete'
+                - 'consent_signed'
+                - 'first_login'
+                - 'first_appointment_booked'
+                - 'first_appointment_attended'
+
+  - name: stg_app_sessions
+    description: App login/session events.
+    columns:
+      - name: patient_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_patients')
+              field: patient_id
+      - name: duration_seconds
+        data_tests:
+          - accepted_range:
+              min_value: 0
+
+  - name: stg_notifications
+    description: Push notifications sent and opened.
+    columns:
+      - name: patient_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_patients')
+              field: patient_id
+      - name: notification_type
+        data_tests:
+          - accepted_values:
+              values: ['medication_reminder', 'appointment_reminder', 'weekly_check_in']
+      - name: ab_test_group
+        data_tests:
+          - accepted_values:
+              values: ['treatment', 'control']
+
+  - name: stg_appointments
+    description: Scheduled appointments with attendance status.
+    columns:
+      - name: appointment_id
+        data_tests:
+          - unique
+          - not_null
+      - name: patient_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_patients')
+              field: patient_id
+      - name: status
+        data_tests:
+          - accepted_values:
+              values: ['attended', 'no_show', 'cancelled']
+
+  - name: stg_medication_logs
+    description: Daily medication adherence logs for chronic-condition patients.
+    columns:
+      - name: patient_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_patients')
+              field: patient_id
+      - name: ab_test_group
+        data_tests:
+          - accepted_values:
+              values: ['treatment', 'control']

@@ -1,0 +1,23 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    description: >
+      Raw tables loaded by src/ingestion/load_raw_to_duckdb.py from Synthea
+      output and the simulated app-event generator (src/data_generation/).
+    tables:
+      - name: patient_profiles
+        description: One row per patient with demographics and assigned engagement profile.
+      - name: conditions
+        description: Raw Synthea conditions (one row per diagnosed condition).
+      - name: onboarding_events
+        description: Onboarding funnel step events per patient.
+      - name: app_sessions
+        description: App login/session events.
+      - name: notifications
+        description: Push notifications sent and opened.
+      - name: appointments
+        description: Scheduled appointments with attendance status.
+      - name: medication_logs
+        description: Daily medication adherence logs for chronic-condition patients.
