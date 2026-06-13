@@ -16,7 +16,7 @@ flowchart LR
     E --> F[dbt: intermediate]
     F --> G[dbt: marts]
     G --> H[Streamlit Dashboards]
-    G --> I[ML Models\nno-show / churn / readmission]
+    G --> I[ML Models\nno-show / churn / adherence risk]
     G --> J[Product Analytics\nfunnels, A/B tests, North Star]
     K[Dagster] -.orchestrates.-> C
     K -.orchestrates.-> D
@@ -43,7 +43,8 @@ Streamlit dashboard: engagement overview (DAU/WAU/MAU), retention cohort curves,
 **Phase 5 — ML Models (DS)**
 - No-show prediction model (classification)
 - Patient disengagement/churn risk model
-- 30-day readmission risk model
+- Medication non-adherence risk model (originally scoped as 30-day
+  readmission; see `docs/design_decisions.md` for the pivot)
 
 Each with feature engineering from marts, evaluation metrics, and feature importance/explainability (SHAP).
 
@@ -60,4 +61,4 @@ CI (GitHub Actions running dbt tests + pytest), screenshots/GIFs of dashboards, 
 - **Data Engineering:** pipeline design, orchestration, dbt modeling, data quality testing, CI/CD
 - **Data Science:** predictive modeling, feature engineering, model evaluation, explainability
 - **Data Analytics:** dashboarding, cohort/retention analysis, SQL-based metric definitions
-- **Product Analytics:** funnel analysis, experimentation/A-B testing, North Star metric framework, health-tech domain metrics (adherence, no-show rate, readmission)
+- **Product Analytics:** funnel analysis, experimentation/A-B testing, North Star metric framework, health-tech domain metrics (adherence, no-show rate, medication non-adherence risk)

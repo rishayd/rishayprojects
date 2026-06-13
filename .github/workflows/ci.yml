@@ -8,6 +8,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      CAREPULSE_DB_PATH: ${{ github.workspace }}/data/warehouse.duckdb
+      DBT_PROFILES_DIR: ${{ github.workspace }}/warehouse
+
     steps:
       - uses: actions/checkout@v4
 
@@ -19,12 +23,42 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run Python tests
+      - name: Run Python unit tests
         run: pytest tests/ -v
 
-      # Uncomment once warehouse/ has dbt models + seed data
-      # - name: Run dbt tests
-      #   run: |
-      #     cd warehouse
-      #     dbt deps
-      #     dbt build
+      # Generates a small (50-patient) mock dataset so the rest of the
+      # pipeline -- dbt, ML models, analytics -- can run without the
+      # Java/Synthea dependency. See tests/fixtures/generate_mock_synthea.py.
+      - name: Generate synthetic dataset (mock Synthea + app events)
+        run: |
+          python tests/fixtures/generate_mock_synthea.py --out data/synthea/csv --n 50 --seed 7
+          python src/data_generation/simulate_app_events.py \
+            --synthea-dir data/synthea/csv --output-dir data/app_events \
+            --sim-days 45 --seed 42
+
+      - name: Load raw data into DuckDB
+        run: python src/ingestion/load_raw_to_duckdb.py --data-dir data --db-path "$CAREPULSE_DB_PATH"
+
+      - name: dbt build (staging -> intermediate -> marts + tests)
+        working-directory: warehouse
+        run: |
+          dbt deps
+          dbt build
+
+      # Each model trains end-to-end against the freshly-built warehouse and
+      # writes its artifacts -- this is a smoke test that the feature SQL,
+      # pipeline, and SHAP explainer still work against current marts.
+      - name: ML model smoke tests
+        run: |
+          python ml/no_show_model/train.py
+          python ml/churn_model/train.py
+          python ml/adherence_risk_model/train.py
+
+      # Same idea for the product-analytics scripts: each one queries the
+      # marts, writes a chart + markdown report, and should run cleanly on
+      # any population size.
+      - name: Product analytics smoke tests
+        run: |
+          python analytics/funnel_analysis.py
+          python analytics/ab_test_analysis.py
+          python analytics/north_star_metric.py

@@ -8,7 +8,7 @@ A synthetic patient population (generated via [Synthea](https://github.com/synth
 
 ## Status
 
-🚧 Work in progress — see [docs/architecture.md](docs/architecture.md) for the full plan and phased roadmap.
+✅ All 7 build phases complete — see [docs/architecture.md](docs/architecture.md) for the full plan and phased roadmap, and [docs/design_decisions.md](docs/design_decisions.md) for the tradeoffs made along the way.
 
 ## Tech Stack
 
@@ -48,7 +48,21 @@ carepulse-analytics/
 - [x] Phase 4 — Streamlit dashboards
 - [x] Phase 5 — ML risk models (no-show, churn, medication non-adherence)
 - [x] Phase 6 — Product analytics (funnels, A/B testing, North Star metric)
-- [ ] Phase 7 — Polish, CI/CD, deploy
+- [x] Phase 7 — Polish, CI/CD, deploy
+
+## Docs
+
+- [Architecture & build plan](docs/architecture.md)
+- [Data dictionary](docs/data_dictionary.md)
+- [Metric definitions](docs/metrics_definitions.md)
+- [Design decisions & tradeoffs](docs/design_decisions.md)
+- [Deployment](docs/deployment.md)
+
+## CI
+
+Every push/PR to `main` generates a small synthetic dataset, runs it through
+ingestion + the full dbt build (86 tests), and smoke-tests every ML model and
+analytics script. See `.github/workflows/ci.yml`.
 
 ## License
 
