@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rishay Refi</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface2: #f0efe9;
+    --border: rgba(0,0,0,0.08);
+    --border-strong: rgba(0,0,0,0.15);
+    --text: #1a1916;
+    --text-muted: #6b6a65;
+    --text-faint: #9c9b96;
+    --blue: #2563eb;
+    --blue-light: #dbeafe;
+    --green: #0f6e56;
+    --green-light: #d1fae5;
+    --amber: #92400e;
+    --amber-light: #fef3c7;
+    --red: #991b1b;
+    --red-light: #fee2e2;
+    --accent: #2563eb;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .logo-icon {
+    width: 28px; height: 28px;
+    background: var(--text);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon svg { width: 16px; height: 16px; fill: white; }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--green);
+    font-weight: 500;
+    background: var(--green-light);
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+  .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .last-updated {
+    font-size: 12px;
+    color: var(--text-faint);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── Layout ── */
+  main { max-width: 1280px; margin: 0 auto; padding: 2rem; }
+
+  .section-header {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── Alert Banner ── */
+  .alert {
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+    border: 1px solid;
+  }
+  .alert-warn { background: var(--amber-light); color: var(--amber); border-color: #fcd34d; }
+  .alert-good { background: var(--green-light); color: var(--green); border-color: #6ee7b7; }
+  .alert-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+
+  /* ── Metric Cards ── */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0,1fr));
+    gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .metric-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+  .metric-value {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+  .metric-sub {
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+  .metric-up { color: var(--red); }
+  .metric-down { color: var(--green); }
+  .metric-warn { color: var(--amber); }
+  .metric-good { color: var(--green); }
+
+  /* ── 2-col Grid ── */
+  .two-col { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1.25rem; margin-bottom: 1.25rem; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    margin-bottom: 1rem;
+  }
+
+  /* ── Tabs ── */
+  .tabs { display: flex; gap: 4px; margin-bottom: 1rem; }
+  .tab {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .tab:hover { background: var(--surface2); }
+  .tab.active { background: var(--text); color: white; border-color: var(--text); }
+
+  /* ── Chart ── */
+  .chart-wrap { position: relative; height: 200px; }
+  .chart-legend { display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-muted); }
+  .legend-line { width: 18px; height: 2px; border-radius: 2px; }
+
+  /* ── Equity Bar ── */
+  .equity-bar-wrap { display: flex; width: 100%; height: 8px; border-radius: 4px; overflow: hidden; margin: 8px 0 6px; }
+  .eq-down { background: #0f6e56; }
+  .eq-prin { background: #2563eb; }
+  .eq-rem { background: var(--surface2); border: 1px solid var(--border); flex: 1; }
+
+  /* ── Progress ── */
+  .progress-wrap { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; margin: 6px 0; }
+  .progress-bar { height: 6px; background: var(--accent); border-radius: 3px; transition: width 0.4s; }
+
+  /* ── Result rows ── */
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .result-row:last-child { border-bottom: none; }
+  .result-label { color: var(--text-muted); }
+  .result-val { font-weight: 600; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text); }
+  .val-good { color: var(--green); }
+  .val-warn { color: var(--amber); }
+  .val-red { color: var(--red); }
+
+  /* ── Sliders ── */
+  .slider-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .slider-label { font-size: 12px; color: var(--text-muted); min-width: 170px; }
+  .slider-row input[type=range] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--surface2);
+    outline: none;
+    cursor: pointer;
+    border: 1px solid var(--border);
+  }
+  .slider-row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--text);
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  .slider-val {
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'DM Mono', monospace;
+    min-width: 64px;
+    text-align: right;
+    color: var(--text);
+  }
+
+  /* ── Divider ── */
+  hr.divider { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+
+  /* ── Notify cards ── */
+  .notify-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
+  .notify-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .notify-card:hover { background: var(--surface2); }
+  .notify-card.on { border-color: #0f6e56; background: var(--green-light); }
+  .notify-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
+  .notify-card.on .notify-title { color: var(--green); }
+  .notify-desc { font-size: 11px; color: var(--text-faint); }
+  .notify-card.on .notify-desc { color: #0d5c47; }
+  .tog-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border-strong);
+    flex-shrink: 0;
+  }
+  .tog-dot.on { background: var(--green); border-color: var(--green); }
+
+  /* ── Select ── */
+  select {
+    width: 100%;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    outline: none;
+  }
+  select:focus { border-color: var(--accent); }
+
+  /* ── Loan setup form ── */
+  .form-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px 16px; }
+  .form-field { display: flex; flex-direction: column; gap: 5px; }
+  .form-label { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+  .form-field input[type=number],
+  .form-field input[type=month],
+  .form-field select {
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    width: 100%;
+    cursor: auto;
+  }
+  .form-field input:focus, .form-field select:focus { border-color: var(--accent); }
+  .form-field.span2 { grid-column: span 2; }
+  @media (max-width: 900px) { .form-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } .form-field.span2 { grid-column: span 1; } }
+
+  /* ── CTA Button ── */
+  .cta-btn {
+    width: 100%;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .cta-btn:hover { background: var(--text); color: white; }
+
+  .subsection-label {
+    font-size: 11px;
+    color: var(--text-faint);
+    font-weight: 500;
+    margin-bottom: 8px;
+    padding: 6px 0 6px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+  }
+
+  /* ── Verdict badge ── */
+  .verdict-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .verdict-strong { background: var(--green-light); color: var(--green); }
+  .verdict-good { background: var(--blue-light); color: var(--blue); }
+  .verdict-warn { background: var(--amber-light); color: var(--amber); }
+  .verdict-wait { background: var(--surface2); color: var(--text-muted); }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    padding: 2rem;
+    font-size: 12px;
+    color: var(--text-faint);
+    border-top: 1px solid var(--border);
+    margin-top: 1rem;
+  }
+
+  @media (max-width: 900px) {
+    .metrics-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .two-col { grid-template-columns: 1fr; }
+    main { padding: 1rem; }
+    header { padding: 0 1rem; }
+  }
+  @media (max-width: 600px) {
+    .metrics-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .notify-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 16 16"><path d="M2 12h12v1.5H2zm1-4h1.5v4H3zm3-3h1.5v7H6zm3 1.5h1.5v5.5H9zm3-4H13.5v9.5H12z"/></svg>
+    </div>
+    Rishay Refi
+  </div>
+  <div class="header-right">
+    <div class="live-badge"><div class="live-dot"></div>Live data</div>
+    <div class="last-updated" id="lastUpdated">—</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- Loan Setup -->
+  <div class="section-header">Your loan details</div>
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-title">Enter your mortgage to personalize this tracker</div>
+    <div class="form-grid">
+      <div class="form-field">
+        <label class="form-label" for="inPurchasePrice">Home purchase price ($)</label>
+        <input type="number" id="inPurchasePrice" min="0" step="1000">
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="inDownPct">Down payment (%)</label>
+        <input type="number" id="inDownPct" min="0" max="100" step="0.5">
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="inRate">Your interest rate (%)</label>
+        <input type="number" id="inRate" min="0" max="20" step="0.01">
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="inTerm">Loan term</label>
+        <select id="inTerm">
+          <option value="15">15 years</option>
+          <option value="20">20 years</option>
+          <option value="30">30 years</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="inStartDate">Loan start date</label>
+        <input type="month" id="inStartDate">
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="inMarketRate">Today's market rate (%)</label>
+        <input type="number" id="inMarketRate" min="0" max="20" step="0.01">
+      </div>
+      <div class="form-field span2">
+        <label class="form-label" for="inBalanceOverride">Remaining balance override — optional, from your loan statement</label>
+        <input type="number" id="inBalanceOverride" min="0" step="100" placeholder="Leave blank to auto-calculate">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:14px;">
+      <button class="cta-btn" style="background:var(--text);color:white;border-color:var(--text);" onclick="saveLoanData()">Save &amp; recalculate</button>
+      <button class="cta-btn" onclick="resetExample()">Reset to example data</button>
+    </div>
+    <div id="formError" style="font-size:12px;color:var(--red);margin-top:10px;display:none;"></div>
+    <div style="font-size:11px;color:var(--text-faint);margin-top:10px;">Saved only in this browser (localStorage) — nothing is sent anywhere.</div>
+  </div>
+
+  <!-- Alert Banner -->
+  <div id="alertBox" class="alert alert-warn">
+    <span class="alert-icon">⚠</span>
+    <span id="alertText">Loading your mortgage data...</span>
+  </div>
+
+  <!-- Metric Cards -->
+  <div class="section-header">Overview</div>
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-label">30-yr rate today</div>
+      <div class="metric-value" id="marketRateVal">—</div>
+      <div class="metric-sub" id="marketRateSub">National average (Freddie Mac PMMS)</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Your rate</div>
+      <div class="metric-value" id="yourRateVal">—</div>
+      <div class="metric-sub" id="rateGapSub">—</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Original loan</div>
+      <div class="metric-value" id="origLoanVal">—</div>
+      <div class="metric-sub" id="downPctSub">—</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Remaining balance</div>
+      <div class="metric-value" id="remBalVal">—</div>
+      <div class="metric-sub" id="prinPaidSub">—</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Home equity</div>
+      <div class="metric-value metric-good" id="equityVal">—</div>
+      <div class="metric-sub metric-good" id="equityPctLabel">—</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Payments remaining</div>
+      <div class="metric-value" id="pmtsLeftVal">—</div>
+      <div class="metric-sub" id="pmtsMadeSub">—</div>
+    </div>
+  </div>
+
+  <!-- Row 1: Chart + Equity Snapshot -->
+  <div class="section-header">Rate history &amp; loan snapshot</div>
+  <div class="two-col">
+
+    <div class="card">
+      <div class="card-title">30-year fixed rate history</div>
+      <div class="tabs">
+        <button class="tab active" data-range="6m" onclick="switchTab(this)">6 months</button>
+        <button class="tab" data-range="1y" onclick="switchTab(this)">1 year</button>
+        <button class="tab" data-range="3y" onclick="switchTab(this)">3 years</button>
+      </div>
+      <div class="chart-wrap"><canvas id="rateChart"></canvas></div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-line" style="background:#2563eb;"></div>Market rate</div>
+        <div class="legend-item"><div class="legend-line" style="background:#92400e;border-top:2px dashed #92400e;height:0;margin-top:1px;"></div><span id="legendYourRateText">Your rate</span></div>
+        <div class="legend-item"><div class="legend-line" style="background:#0f6e56;border-top:2px dashed #0f6e56;height:0;margin-top:1px;"></div>Alert threshold</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Home equity snapshot</div>
+      <div style="margin-bottom:1rem;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:2px;">
+          <span>Equity breakdown</span><span id="equityBreakLabel" style="font-weight:600;color:var(--green);">—</span>
+        </div>
+        <div class="equity-bar-wrap" id="equityBar"></div>
+        <div style="display:flex;gap:14px;margin-top:6px;">
+          <div class="legend-item"><div style="width:8px;height:8px;border-radius:2px;background:#0f6e56;margin-right:3px;"></div>Down payment</div>
+          <div class="legend-item"><div style="width:8px;height:8px;border-radius:2px;background:#2563eb;margin-right:3px;"></div>Principal paid</div>
+          <div class="legend-item"><div style="width:8px;height:8px;border-radius:2px;background:var(--surface2);border:1px solid var(--border);margin-right:3px;"></div>Remaining</div>
+        </div>
+      </div>
+      <div class="result-row"><span class="result-label">Est. purchase price</span><span class="result-val" id="purchasePrice">—</span></div>
+      <div class="result-row"><span class="result-label" id="downPaymentLabel">Down payment</span><span class="result-val val-good" id="downPayment">—</span></div>
+      <div class="result-row"><span class="result-label" id="prinPaidLabel">Principal paid</span><span class="result-val" id="prinPaid">—</span></div>
+      <div class="result-row"><span class="result-label" id="intPaidLabel">Interest paid</span><span class="result-val val-warn" id="intPaid">—</span></div>
+      <div class="result-row"><span class="result-label">Total equity</span><span class="result-val val-good" id="totalEquity">—</span></div>
+      <div class="result-row"><span class="result-label">LTV ratio</span><span class="result-val" id="ltvRatio">—</span></div>
+      <div class="result-row"><span class="result-label">Estimated payoff date</span><span class="result-val" id="payoffDate">—</span></div>
+    </div>
+
+  </div>
+
+  <!-- Row 2: Refinance Calc + Notifications -->
+  <div class="section-header">Refinance calculator &amp; alerts</div>
+  <div class="two-col">
+
+    <div class="card">
+      <div class="card-title">Refinance calculator</div>
+      <div class="slider-row"><span class="slider-label">Alert threshold (%)</span><input type="range" id="threshold" min="4" max="7" step="0.1" value="5.5" oninput="update()"><span class="slider-val" id="thresholdVal">5.5%</span></div>
+      <div class="slider-row"><span class="slider-label">New loan term (years)</span><input type="range" id="newTerm" min="10" max="30" step="1" value="30" oninput="update()"><span class="slider-val" id="newTermVal">30 yrs</span></div>
+      <div class="slider-row"><span class="slider-label">Estimated closing costs ($)</span><input type="range" id="closing" min="3000" max="15000" step="500" value="6000" oninput="update()"><span class="slider-val" id="closingVal">$6,000</span></div>
+
+      <div class="subsection-label" id="marketRateLabel">At today's market rate</div>
+      <div class="result-row"><span class="result-label">Current monthly payment</span><span class="result-val" id="currentPaymentDisplay">—</span></div>
+      <div class="result-row"><span class="result-label">New payment at market rate</span><span class="result-val val-good" id="marketPayment">—</span></div>
+      <div class="result-row"><span class="result-label">Monthly savings now</span><span class="result-val val-good" id="marketSavings">—</span></div>
+      <div class="result-row"><span class="result-label">Break-even at market rate</span><span class="result-val" id="marketBreakEven">—</span></div>
+
+      <div class="subsection-label">At your alert threshold (<span id="thrLabel">5.5%</span>)</div>
+      <div class="result-row"><span class="result-label">New monthly payment</span><span class="result-val val-good" id="newPayment">—</span></div>
+      <div class="result-row"><span class="result-label">Monthly savings</span><span class="result-val val-good" id="monthlySavings">—</span></div>
+      <div class="result-row"><span class="result-label">Annual savings</span><span class="result-val val-good" id="annualSavings">—</span></div>
+      <div class="result-row"><span class="result-label">Lifetime interest saved</span><span class="result-val val-good" id="totalSavings">—</span></div>
+      <div class="result-row"><span class="result-label">Break-even point</span><span class="result-val" id="breakEven">—</span></div>
+      <div class="result-row"><span class="result-label">Verdict</span><span id="verdict">—</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Notification settings</div>
+      <div class="notify-grid">
+        <div class="notify-card on" id="n-email" onclick="toggleNotify('email')">
+          <div class="notify-title"><span class="tog-dot on" id="t-email"></span>Email</div>
+          <div class="notify-desc">Daily digest + instant alerts</div>
+        </div>
+        <div class="notify-card on" id="n-sms" onclick="toggleNotify('sms')">
+          <div class="notify-title"><span class="tog-dot on" id="t-sms"></span>SMS</div>
+          <div class="notify-desc">Instant text alert</div>
+        </div>
+        <div class="notify-card on" id="n-push" onclick="toggleNotify('push')">
+          <div class="notify-title"><span class="tog-dot on" id="t-push"></span>Push</div>
+          <div class="notify-desc">Browser notification</div>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Alert me when market rate drops:</div>
+      <select id="alertTrigger" style="margin-bottom:1rem;">
+        <option>At or below my threshold</option>
+        <option>0.25% below my threshold</option>
+        <option>0.5% below my threshold</option>
+        <option>Any drop from current rate</option>
+      </select>
+
+      <hr class="divider">
+      <div class="card-title" style="margin-bottom:0.75rem;">Your loan at a glance</div>
+      <div class="result-row"><span class="result-label">Monthly payment (P&I)</span><span class="result-val" id="pmtPI">—</span></div>
+      <div class="result-row"><span class="result-label">Payments made / remaining</span><span class="result-val" id="pmtsMadeRemaining">—</span></div>
+      <div class="result-row"><span class="result-label">Rate gap (yours vs market)</span><span class="result-val" id="rateGapCard">—</span></div>
+      <div class="result-row"><span class="result-label">Loan-to-value ratio</span><span class="result-val" id="ltvCard">—</span></div>
+      <div class="result-row"><span class="result-label">Alert threshold</span><span class="result-val val-good" id="thresholdCard">5.50%</span></div>
+
+      <hr class="divider">
+      <div style="font-size:11px;color:var(--text-faint);margin-bottom:10px;line-height:1.6;">
+        Rate data sourced from Freddie Mac PMMS. Updated weekly. Connect to FRED API or Lambda Finance API for live daily updates.
+      </div>
+      <a href="https://fred.stlouisfed.org/series/MORTGAGE30US" target="_blank" class="cta-btn" style="display:block;text-decoration:none;color:var(--text);">View FRED rate data ↗</a>
+    </div>
+
+  </div>
+
+</main>
+
+<footer>
+  Rishay Refi &nbsp;·&nbsp; Data: Freddie Mac PMMS &nbsp;·&nbsp; For informational purposes only. Not financial advice.
+</footer>
+
+<script>
+const STORAGE_KEY = 'mortgageTrackerData';
+
+const EXAMPLE_DATA = {
+  purchasePrice: 522249,
+  downPct: 20,
+  rate: 6.93,
+  termYears: 30,
+  marketRate: 6.46,
+  balanceOverride: null
+};
+
+let data = null;
+let chartInstance = null;
+let current = { LIVE_RATE: 6.46, YOUR_RATE: 6.93 };
+
+const baseDatasets = {
+  '6m': { labels:['Oct','Nov','Dec','Jan','Feb','Mar','Apr'], data:[6.72,6.58,6.44,6.31,6.38,6.54,6.46] },
+  '1y': { labels:['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr'], data:[6.64,6.89,6.92,6.78,6.61,6.09,6.72,6.58,6.44,6.31,6.38,6.54,6.46] },
+  '3y': { labels:['Apr\'23','Jul','Oct','Jan\'24','Apr','Jul','Oct','Jan\'25','Apr','Jul','Oct','Jan\'26','Apr'], data:[6.34,6.81,7.57,6.62,6.87,6.72,6.89,7.04,6.64,6.21,6.72,6.31,6.46] }
+};
+
+function mPmt(principal, rate, years) {
+  const r = rate / 100 / 12;
+  const n = years * 12;
+  if (r === 0) return principal / n;
+  return principal * r * Math.pow(1+r,n) / (Math.pow(1+r,n)-1);
+}
+function fmtD(n) { return '$' + Math.round(n).toLocaleString(); }
+
+function remainingBalance(principal, ratePct, totalMonths, paymentsMade) {
+  const r = ratePct / 100 / 12;
+  const k = Math.max(0, Math.min(paymentsMade, totalMonths));
+  if (r === 0) return principal * (1 - k / totalMonths);
+  return principal * (Math.pow(1+r, totalMonths) - Math.pow(1+r, k)) / (Math.pow(1+r, totalMonths) - 1);
+}
+
+function monthsBetween(startDateStr) {
+  const [y, m] = startDateStr.split('-').map(Number);
+  const now = new Date();
+  return (now.getFullYear() - y) * 12 + (now.getMonth() - (m - 1));
+}
+
+function defaultStartDate() {
+  const d = new Date();
+  d.setMonth(d.getMonth() - 12);
+  return d.toISOString().slice(0, 7);
+}
+
+function loadData() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try { data = JSON.parse(saved); return; } catch(e) {}
+  }
+  data = { ...EXAMPLE_DATA, startDate: defaultStartDate() };
+}
+
+function populateForm() {
+  document.getElementById('inPurchasePrice').value = data.purchasePrice;
+  document.getElementById('inDownPct').value = data.downPct;
+  document.getElementById('inRate').value = data.rate;
+  document.getElementById('inTerm').value = data.termYears;
+  document.getElementById('inStartDate').value = data.startDate;
+  document.getElementById('inMarketRate').value = data.marketRate;
+  document.getElementById('inBalanceOverride').value = data.balanceOverride ?? '';
+}
+
+function configureThresholdSlider() {
+  const slider = document.getElementById('threshold');
+  const lo = Math.floor(Math.min(data.marketRate, data.rate) - 1.5);
+  const hi = Math.ceil(Math.max(data.marketRate, data.rate) + 1.5);
+  slider.min = Math.max(0, lo);
+  slider.max = hi;
+  const suggested = Math.max(slider.min, Math.round((data.rate - 1) * 10) / 10);
+  slider.value = suggested;
+}
+
+function saveLoanData() {
+  const errEl = document.getElementById('formError');
+  const purchasePrice = parseFloat(document.getElementById('inPurchasePrice').value);
+  const downPct = parseFloat(document.getElementById('inDownPct').value);
+  const rate = parseFloat(document.getElementById('inRate').value);
+  const termYears = parseInt(document.getElementById('inTerm').value);
+  const startDate = document.getElementById('inStartDate').value;
+  const marketRate = parseFloat(document.getElementById('inMarketRate').value);
+  const balanceOverrideRaw = document.getElementById('inBalanceOverride').value;
+
+  if (!(purchasePrice > 0) || isNaN(rate) || rate < 0 || !termYears || !startDate || isNaN(marketRate) || marketRate < 0 || isNaN(downPct) || downPct < 0 || downPct >= 100) {
+    errEl.textContent = 'Please fill in a valid purchase price, down payment (0-99%), rate, term, start date, and market rate.';
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+
+  data = {
+    purchasePrice, downPct, rate, termYears, startDate, marketRate,
+    balanceOverride: balanceOverrideRaw !== '' ? parseFloat(balanceOverrideRaw) : null
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  configureThresholdSlider();
+  update();
+}
+
+function resetExample() {
+  data = { ...EXAMPLE_DATA, startDate: defaultStartDate() };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  document.getElementById('formError').style.display = 'none';
+  populateForm();
+  configureThresholdSlider();
+  update();
+}
+
+function update() {
+  const thr = parseFloat(document.getElementById('threshold').value);
+  const newTerm = parseInt(document.getElementById('newTerm').value);
+  const closing = parseFloat(document.getElementById('closing').value);
+
+  document.getElementById('thresholdVal').textContent = thr.toFixed(1) + '%';
+  document.getElementById('newTermVal').textContent = newTerm + ' yrs';
+  document.getElementById('closingVal').textContent = '$' + closing.toLocaleString();
+  document.getElementById('thrLabel').textContent = thr.toFixed(1) + '%';
+  document.getElementById('thresholdCard').textContent = thr.toFixed(2) + '%';
+
+  // Derive loan state from user inputs
+  const PURCHASE_PRICE = data.purchasePrice;
+  const DOWN_PAYMENT = PURCHASE_PRICE * (data.downPct / 100);
+  const ORIG_LOAN = PURCHASE_PRICE - DOWN_PAYMENT;
+  const TOTAL_PMTS = data.termYears * 12;
+  const monthsElapsed = monthsBetween(data.startDate);
+  const PMTS_MADE = Math.max(0, Math.min(monthsElapsed, TOTAL_PMTS));
+  const PMTS_LEFT = TOTAL_PMTS - PMTS_MADE;
+  const YOUR_RATE = data.rate;
+  const LIVE_RATE = data.marketRate;
+  const CURRENT_PAYMENT = mPmt(ORIG_LOAN, YOUR_RATE, data.termYears);
+  const computedBalance = remainingBalance(ORIG_LOAN, YOUR_RATE, TOTAL_PMTS, PMTS_MADE);
+  const REMAINING_BALANCE = (data.balanceOverride != null && !isNaN(data.balanceOverride)) ? data.balanceOverride : computedBalance;
+
+  current = { LIVE_RATE, YOUR_RATE };
+
+  // Overview metric cards
+  document.getElementById('marketRateVal').textContent = LIVE_RATE.toFixed(2) + '%';
+  document.getElementById('origLoanVal').textContent = fmtD(ORIG_LOAN);
+  document.getElementById('downPctSub').textContent = 'after ' + data.downPct + '% down';
+  document.getElementById('remBalVal').textContent = fmtD(REMAINING_BALANCE);
+  document.getElementById('pmtsLeftVal').textContent = PMTS_LEFT;
+  document.getElementById('pmtsMadeSub').textContent = PMTS_MADE + ' of ' + TOTAL_PMTS + ' made';
+
+  const yourRateEl = document.getElementById('yourRateVal');
+  const rateGapSubEl = document.getElementById('rateGapSub');
+  const rateGapCardEl = document.getElementById('rateGapCard');
+  const gap = YOUR_RATE - LIVE_RATE;
+  yourRateEl.textContent = YOUR_RATE.toFixed(2) + '%';
+  if (gap > 0.001) {
+    yourRateEl.className = 'metric-value metric-warn';
+    rateGapSubEl.className = 'metric-sub metric-warn';
+    rateGapSubEl.textContent = gap.toFixed(2) + '% above market';
+    rateGapCardEl.className = 'result-val val-warn';
+    rateGapCardEl.textContent = '+' + gap.toFixed(2) + '%';
+  } else if (gap < -0.001) {
+    yourRateEl.className = 'metric-value metric-good';
+    rateGapSubEl.className = 'metric-sub metric-good';
+    rateGapSubEl.textContent = Math.abs(gap).toFixed(2) + '% below market';
+    rateGapCardEl.className = 'result-val val-good';
+    rateGapCardEl.textContent = gap.toFixed(2) + '%';
+  } else {
+    yourRateEl.className = 'metric-value';
+    rateGapSubEl.className = 'metric-sub';
+    rateGapSubEl.textContent = 'At market rate';
+    rateGapCardEl.className = 'result-val';
+    rateGapCardEl.textContent = '0.00%';
+  }
+
+  document.getElementById('legendYourRateText').textContent = 'Your rate (' + YOUR_RATE.toFixed(2) + '%)';
+  document.getElementById('marketRateLabel').textContent = "At today's market rate (" + LIVE_RATE.toFixed(2) + '%)';
+  document.getElementById('currentPaymentDisplay').textContent = fmtD(CURRENT_PAYMENT) + '/mo';
+  document.getElementById('pmtPI').textContent = fmtD(CURRENT_PAYMENT);
+  document.getElementById('pmtsMadeRemaining').textContent = PMTS_MADE + ' / ' + PMTS_LEFT;
+
+  // Equity
+  const prinPaid = ORIG_LOAN - REMAINING_BALANCE;
+  const intPaid = CURRENT_PAYMENT * PMTS_MADE - prinPaid;
+  const totalEquity = DOWN_PAYMENT + prinPaid;
+  const equityPct = (totalEquity / PURCHASE_PRICE * 100).toFixed(1);
+  const ltv = (REMAINING_BALANCE / PURCHASE_PRICE * 100).toFixed(1);
+
+  document.getElementById('purchasePrice').textContent = fmtD(PURCHASE_PRICE);
+  document.getElementById('downPaymentLabel').textContent = 'Down payment (' + data.downPct + '%)';
+  document.getElementById('downPayment').textContent = fmtD(DOWN_PAYMENT);
+  document.getElementById('prinPaidLabel').textContent = 'Principal paid (' + PMTS_MADE + ' pmts)';
+  document.getElementById('prinPaid').textContent = fmtD(Math.max(0, prinPaid));
+  document.getElementById('intPaidLabel').textContent = 'Interest paid (' + PMTS_MADE + ' pmts)';
+  document.getElementById('intPaid').textContent = fmtD(Math.max(0, intPaid));
+  document.getElementById('totalEquity').textContent = fmtD(totalEquity);
+  document.getElementById('equityVal').textContent = fmtD(totalEquity);
+  document.getElementById('equityPctLabel').textContent = equityPct + '% equity';
+  document.getElementById('equityBreakLabel').textContent = equityPct + '% equity built';
+  document.getElementById('ltvRatio').textContent = ltv + '% LTV';
+  document.getElementById('ltvCard').textContent = ltv + '% LTV';
+  document.getElementById('prinPaidSub').textContent = fmtD(Math.max(0, prinPaid)) + ' principal paid';
+
+  const downP = (DOWN_PAYMENT / PURCHASE_PRICE * 100).toFixed(2);
+  const prinP = (prinPaid / PURCHASE_PRICE * 100).toFixed(2);
+  const bar = document.getElementById('equityBar');
+  bar.innerHTML = `<div class="eq-down" style="width:${downP}%"></div><div class="eq-prin" style="width:${prinP}%"></div><div class="eq-rem"></div>`;
+
+  const payoffDate = new Date();
+  payoffDate.setMonth(payoffDate.getMonth() + PMTS_LEFT);
+  document.getElementById('payoffDate').textContent = payoffDate.toLocaleDateString('en-US', {month:'short', year:'numeric'});
+
+  // Alert
+  const belowThreshold = LIVE_RATE <= thr;
+  if (belowThreshold) {
+    document.getElementById('alertBox').className = 'alert alert-good';
+    document.getElementById('alertText').textContent = '🎉 Market rate (' + LIVE_RATE.toFixed(2) + '%) is at or below your threshold (' + thr.toFixed(1) + '%). This is a strong signal — explore refinancing now!';
+  } else {
+    document.getElementById('alertBox').className = 'alert alert-warn';
+    const gapMsg = gap > 0 ? ('is ' + gap.toFixed(2) + '% below your rate of ' + YOUR_RATE.toFixed(2) + '%') : 'is at or above your rate';
+    document.getElementById('alertText').textContent = 'Market rate (' + LIVE_RATE.toFixed(2) + '%) ' + gapMsg + '. Refinancing may be worth exploring — see the calculator below.';
+  }
+
+  // At market rate
+  const marketPmt = mPmt(REMAINING_BALANCE, LIVE_RATE, newTerm);
+  const marketSave = CURRENT_PAYMENT - marketPmt;
+  const marketBE = marketSave > 0 ? Math.ceil(closing / marketSave) : null;
+  document.getElementById('marketPayment').textContent = fmtD(marketPmt) + '/mo';
+  document.getElementById('marketSavings').textContent = marketSave > 0 ? fmtD(marketSave) + '/mo' : 'Minimal';
+  document.getElementById('marketBreakEven').textContent = marketBE ? marketBE + ' months (' + (marketBE/12).toFixed(1) + ' yrs)' : 'N/A';
+
+  // At threshold
+  const thrPmt = mPmt(REMAINING_BALANCE, thr, newTerm);
+  const monthlySave = CURRENT_PAYMENT - thrPmt;
+  const annualSave = monthlySave * 12;
+  const curRemInt = CURRENT_PAYMENT * PMTS_LEFT - REMAINING_BALANCE;
+  const newTotInt = thrPmt * newTerm * 12 - REMAINING_BALANCE;
+  const totalSave = curRemInt - newTotInt - closing;
+  const be = monthlySave > 0 ? Math.ceil(closing / monthlySave) : null;
+
+  document.getElementById('newPayment').textContent = fmtD(thrPmt) + '/mo';
+  document.getElementById('monthlySavings').textContent = monthlySave > 0 ? fmtD(monthlySave) + '/mo' : 'No savings';
+  document.getElementById('annualSavings').textContent = annualSave > 0 ? fmtD(annualSave) + '/yr' : 'No savings';
+  document.getElementById('totalSavings').textContent = totalSave > 0 ? fmtD(totalSave) : 'Net loss after costs';
+  document.getElementById('breakEven').textContent = be ? be + ' months (' + (be/12).toFixed(1) + ' yrs)' : 'N/A';
+
+  let verdictHTML = '';
+  if (monthlySave > 300 && be && be < 24) verdictHTML = '<span class="verdict-badge verdict-strong">Strong candidate</span>';
+  else if (monthlySave > 150 && be && be < 36) verdictHTML = '<span class="verdict-badge verdict-good">Likely worthwhile</span>';
+  else if (monthlySave > 50) verdictHTML = '<span class="verdict-badge verdict-warn">Marginal — monitor rates</span>';
+  else verdictHTML = '<span class="verdict-badge verdict-wait">Wait for lower rates</span>';
+  document.getElementById('verdict').innerHTML = verdictHTML;
+
+  updateChart(document.querySelector('.tab.active')?.dataset?.range || '6m', thr);
+}
+
+function updateChart(range, thr) {
+  if (chartInstance) chartInstance.destroy();
+  const base = baseDatasets[range];
+  const d = { labels: base.labels, data: base.data.slice() };
+  d.data[d.data.length - 1] = current.LIVE_RATE;
+  chartInstance = new Chart(document.getElementById('rateChart'), {
+    type: 'line',
+    data: {
+      labels: d.labels,
+      datasets: [
+        { label:'Market', data:d.data, borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,0.06)', borderWidth:2, pointRadius:3, pointBackgroundColor:'#2563eb', fill:true, tension:0.3 },
+        { label:'Your rate', data:Array(d.labels.length).fill(current.YOUR_RATE), borderColor:'#92400e', borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false },
+        { label:'Threshold', data:Array(d.labels.length).fill(thr), borderColor:'#0f6e56', borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label: ctx => ctx.dataset.label + ': ' + ctx.raw.toFixed(2) + '%' } } },
+      scales:{
+        y:{ min: Math.min(thr-0.4, Math.min(...d.data)-0.2), max: Math.max(current.YOUR_RATE+0.3, Math.max(...d.data)+0.2), ticks:{ callback: v => v.toFixed(1)+'%', font:{size:11, family:'DM Mono'} }, grid:{ color:'rgba(0,0,0,0.04)' }, border:{ dash:[2,4] } },
+        x:{ ticks:{ font:{size:11, family:'DM Sans'}, maxRotation:0 }, grid:{ display:false } }
+      }
+    }
+  });
+}
+
+function switchTab(el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  updateChart(el.dataset.range, parseFloat(document.getElementById('threshold').value));
+}
+
+function toggleNotify(type) {
+  document.getElementById('n-'+type).classList.toggle('on');
+  document.getElementById('t-'+type).classList.toggle('on');
+}
+
+// Set last updated
+const now = new Date();
+document.getElementById('lastUpdated').textContent = 'Updated ' + now.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+
+loadData();
+populateForm();
+configureThresholdSlider();
+update();
+</script>
+</body>
+</html>
