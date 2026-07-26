@@ -352,17 +352,34 @@
     <div class="card-title">Enter the car you're considering to get an unbiased affordability read</div>
 
     <div class="subsection-label">Vehicle</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Look up your car to pull its real EPA-rated fuel economy — optional, this just fills in the fields below, which you can also enter by hand.</div>
     <div class="form-grid">
+      <div class="form-field">
+        <label class="form-label" for="lookupYear">Year</label>
+        <select id="lookupYear" onchange="onLookupYearChange()"><option value="">Loading years…</option></select>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="lookupMake">Make</label>
+        <select id="lookupMake" onchange="onLookupMakeChange()" disabled><option value="">Select year first…</option></select>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="lookupModel">Model</label>
+        <select id="lookupModel" onchange="onLookupModelChange()" disabled><option value="">Select make first…</option></select>
+      </div>
+      <div class="form-field span3">
+        <label class="form-label" for="lookupTrim">Trim / engine</label>
+        <select id="lookupTrim" onchange="onLookupTrimChange()" disabled><option value="">Select model first…</option></select>
+      </div>
+      <div class="form-field span3" id="lookupStatus" style="display:none;font-size:12px;"></div>
+    </div>
+
+    <div class="form-grid" style="margin-top:14px;">
       <div class="form-field span2">
         <label class="form-label" for="inVehicleName">Vehicle (year, make, model)</label>
         <input type="text" id="inVehicleName" placeholder="e.g. 2021 Honda CR-V EX-L">
       </div>
       <div class="form-field">
-        <label class="form-label" for="inListingUrl">Listing URL (optional — kept as a reference link only)</label>
-        <input type="url" id="inListingUrl" placeholder="https://...">
-      </div>
-      <div class="form-field">
-        <label class="form-label" for="selVehicleType">Vehicle type</label>
+        <label class="form-label" for="selVehicleType">Vehicle category</label>
         <select id="selVehicleType" onchange="applyVehicleDefaults()">
           <option value="sedan">Sedan / coupe</option>
           <option value="suv">SUV / crossover</option>
@@ -472,7 +489,7 @@
       <button class="cta-btn" onclick="resetExample()">Reset to example data</button>
     </div>
     <div id="formError" style="font-size:12px;color:var(--red);margin-top:10px;display:none;"></div>
-    <div style="font-size:11px;color:var(--text-faint);margin-top:10px;">Saved only in this browser (localStorage) — nothing is sent anywhere. The listing link is stored locally too and only used to give you a clickable reference; it is never fetched or read by this page.</div>
+    <div style="font-size:11px;color:var(--text-faint);margin-top:10px;">Saved only in this browser (localStorage) — nothing you enter is sent anywhere. The Year/Make/Model/Trim lookup above queries the EPA's public fueleconomy.gov API directly from your browser to pull real fuel-economy data; that's the only outside request this page makes.</div>
   </div>
 
   <!-- Alert Banner -->
@@ -581,7 +598,6 @@
     <div class="card">
       <div class="card-title">Your budget at a glance</div>
       <div class="result-row"><span class="result-label">Vehicle</span><span class="result-val" id="rowVehicleName">—</span></div>
-      <div class="result-row" id="rowListingRow" style="display:none;"><span class="result-label">Listing</span><span class="result-val"><a href="#" id="rowListingLink" target="_blank" rel="noopener noreferrer" style="color:var(--blue);text-decoration:none;">View ↗</a></span></div>
       <div class="result-row"><span class="result-label">Monthly income (gross)</span><span class="result-val" id="rowIncome">—</span></div>
       <div class="result-row"><span class="result-label">Total monthly car cost</span><span class="result-val" id="rowGlanceCarCost">—</span></div>
       <div class="result-row"><span class="result-label">Other expenses</span><span class="result-val" id="rowGlanceOther">—</span></div>
@@ -592,7 +608,7 @@
 
       <hr class="divider">
       <div style="font-size:11px;color:var(--text-faint);line-height:1.6;">
-        Insurance, maintenance, fuel economy, and depreciation are rough national-average estimates based on vehicle type — swap in real quotes when you have them for a more accurate picture. This tool does not access your bank, credit, or the listing site; every number comes from what you type in.
+        Fuel economy comes from the EPA's live database when you use the vehicle lookup. Insurance, maintenance, and depreciation are still rough national-average estimates based on vehicle category — swap in real quotes when you have them. This tool never accesses your bank or credit.
       </div>
     </div>
 
@@ -616,10 +632,11 @@ const VEHICLE_DEFAULTS = {
 };
 const USED_MAINT_MULT = 1.4;
 const HYBRID_MPG_MULT = 1.45;
+const LUXURY_MAKES = new Set(['Acura','Alfa Romeo','Aston Martin','Bentley','BMW','Bugatti','Cadillac','Ferrari','Genesis','Infiniti','Jaguar','Lamborghini','Land Rover','Lexus','Lincoln','Lotus','Maserati','Maybach','McLaren','McLaren Automotive','Mercedes-Benz','Polestar','Porsche','Rolls-Royce']);
+const EPA_BASE = 'https://www.fueleconomy.gov/ws/rest/vehicle';
 
 const EXAMPLE_DATA = {
   vehicleName: '2021 Honda CR-V EX-L',
-  listingUrl: '',
   vehicleType: 'suv',
   condition: 'used',
   fuelType: 'gasoline',
@@ -687,6 +704,145 @@ function applyVehicleDefaults() {
   }
 }
 
+function asArray(menuItem) {
+  if (!menuItem) return [];
+  return Array.isArray(menuItem) ? menuItem : [menuItem];
+}
+
+async function epaFetch(url) {
+  const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+  if (!res.ok) throw new Error('EPA API error ' + res.status);
+  return res.json();
+}
+
+function epaMenuUrl(kind, params) {
+  const url = new URL(EPA_BASE + '/menu/' + kind);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  return url.toString();
+}
+
+function showLookupStatus(msg, isError) {
+  const el = document.getElementById('lookupStatus');
+  el.textContent = msg;
+  el.style.color = isError ? 'var(--red)' : 'var(--green)';
+  el.style.display = 'block';
+}
+
+function hideLookupStatus() {
+  document.getElementById('lookupStatus').style.display = 'none';
+}
+
+function fillSelect(sel, items, placeholder) {
+  sel.innerHTML = '<option value="">' + placeholder + '</option>' +
+    items.map(i => `<option value="${i.value}">${i.text}</option>`).join('');
+}
+
+async function loadLookupYears() {
+  const sel = document.getElementById('lookupYear');
+  try {
+    const data = await epaFetch(epaMenuUrl('year', {}));
+    fillSelect(sel, asArray(data.menuItem), 'Select year…');
+  } catch (e) {
+    sel.innerHTML = '<option value="">Lookup unavailable</option>';
+    showLookupStatus("Couldn't reach the EPA vehicle database — you can still fill in the fields below by hand.", true);
+  }
+}
+
+async function onLookupYearChange() {
+  const year = document.getElementById('lookupYear').value;
+  const makeSel = document.getElementById('lookupMake');
+  const modelSel = document.getElementById('lookupModel');
+  const trimSel = document.getElementById('lookupTrim');
+  modelSel.innerHTML = '<option value="">Select make first…</option>'; modelSel.disabled = true;
+  trimSel.innerHTML = '<option value="">Select model first…</option>'; trimSel.disabled = true;
+  hideLookupStatus();
+  if (!year) { makeSel.innerHTML = '<option value="">Select year first…</option>'; makeSel.disabled = true; return; }
+  makeSel.disabled = false;
+  makeSel.innerHTML = '<option value="">Loading…</option>';
+  try {
+    const data = await epaFetch(epaMenuUrl('make', { year }));
+    fillSelect(makeSel, asArray(data.menuItem), 'Select make…');
+  } catch (e) {
+    makeSel.innerHTML = '<option value="">Couldn\'t load makes</option>';
+    showLookupStatus("Couldn't reach the EPA vehicle database — you can still fill in the fields below by hand.", true);
+  }
+}
+
+async function onLookupMakeChange() {
+  const year = document.getElementById('lookupYear').value;
+  const make = document.getElementById('lookupMake').value;
+  const modelSel = document.getElementById('lookupModel');
+  const trimSel = document.getElementById('lookupTrim');
+  trimSel.innerHTML = '<option value="">Select model first…</option>'; trimSel.disabled = true;
+  hideLookupStatus();
+  if (!make) { modelSel.innerHTML = '<option value="">Select make first…</option>'; modelSel.disabled = true; return; }
+  modelSel.disabled = false;
+  modelSel.innerHTML = '<option value="">Loading…</option>';
+  try {
+    const data = await epaFetch(epaMenuUrl('model', { year, make }));
+    fillSelect(modelSel, asArray(data.menuItem), 'Select model…');
+  } catch (e) {
+    modelSel.innerHTML = '<option value="">Couldn\'t load models</option>';
+    showLookupStatus("Couldn't reach the EPA vehicle database — you can still fill in the fields below by hand.", true);
+  }
+}
+
+async function onLookupModelChange() {
+  const year = document.getElementById('lookupYear').value;
+  const make = document.getElementById('lookupMake').value;
+  const model = document.getElementById('lookupModel').value;
+  const trimSel = document.getElementById('lookupTrim');
+  hideLookupStatus();
+  if (!model) { trimSel.innerHTML = '<option value="">Select model first…</option>'; trimSel.disabled = true; return; }
+  trimSel.disabled = false;
+  trimSel.innerHTML = '<option value="">Loading…</option>';
+  try {
+    const data = await epaFetch(epaMenuUrl('options', { year, make, model }));
+    fillSelect(trimSel, asArray(data.menuItem), 'Select trim…');
+  } catch (e) {
+    trimSel.innerHTML = '<option value="">Couldn\'t load trims</option>';
+    showLookupStatus("Couldn't reach the EPA vehicle database — you can still fill in the fields below by hand.", true);
+  }
+}
+
+async function onLookupTrimChange() {
+  const vehicleId = document.getElementById('lookupTrim').value;
+  hideLookupStatus();
+  if (!vehicleId) return;
+  try {
+    const v = await epaFetch(EPA_BASE + '/' + vehicleId);
+    applyEpaVehicle(v);
+  } catch (e) {
+    showLookupStatus("Couldn't load details for that vehicle — you can still fill in the fields below by hand.", true);
+  }
+}
+
+function applyEpaVehicle(v) {
+  let fuelType = 'gasoline';
+  if (v.atvType === 'EV' || v.fuelType1 === 'Electricity') fuelType = 'electric';
+  else if ((v.atvType || '').toLowerCase().includes('hybrid')) fuelType = 'hybrid';
+
+  const vclass = (v.VClass || '').toLowerCase();
+  let category = 'sedan';
+  if (vclass.includes('pickup')) category = 'truck';
+  else if (vclass.includes('minivan')) category = 'minivan';
+  else if (vclass.includes('sport utility') || vclass.includes('suv') || vclass.includes('van')) category = 'suv';
+  if (LUXURY_MAKES.has((v.make || '').trim())) category = 'luxury';
+
+  document.getElementById('inVehicleName').value = [v.year, v.make, v.model].filter(Boolean).join(' ');
+  document.getElementById('selFuelType').value = fuelType;
+  document.getElementById('selVehicleType').value = category;
+  applyVehicleDefaults();
+
+  const efficiency = fuelType === 'electric' ? parseFloat(v.combE) : parseFloat(v.comb08);
+  if (efficiency > 0) {
+    document.getElementById('inEfficiency').value = Math.round(efficiency * 10) / 10;
+  }
+
+  const effText = fuelType === 'electric' ? efficiency.toFixed(1) + ' kWh/100mi' : Math.round(efficiency) + ' MPG combined';
+  showLookupStatus('Loaded ' + v.year + ' ' + v.make + ' ' + v.model + ' — ' + effText + ' · ' + (v.VClass || 'unknown class') + '. Click "Save & recalculate" to apply.', false);
+}
+
 function loadData() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
@@ -697,7 +853,6 @@ function loadData() {
 
 function populateForm() {
   document.getElementById('inVehicleName').value = data.vehicleName || '';
-  document.getElementById('inListingUrl').value = data.listingUrl || '';
   document.getElementById('selVehicleType').value = data.vehicleType;
   document.getElementById('selCondition').value = data.condition;
   document.getElementById('selFuelType').value = data.fuelType;
@@ -731,7 +886,6 @@ function populateForm() {
 function saveCarData() {
   const errEl = document.getElementById('formError');
   const vehicleName = document.getElementById('inVehicleName').value.trim();
-  const listingUrl = document.getElementById('inListingUrl').value.trim();
   const vehicleType = document.getElementById('selVehicleType').value;
   const condition = document.getElementById('selCondition').value;
   const fuelType = document.getElementById('selFuelType').value;
@@ -760,7 +914,7 @@ function saveCarData() {
   errEl.style.display = 'none';
 
   data = {
-    vehicleName, listingUrl, vehicleType, condition, fuelType, price, downPayment, tradeIn, taxRate, fees,
+    vehicleName, vehicleType, condition, fuelType, price, downPayment, tradeIn, taxRate, fees,
     apr, termMonths, milesPerYear, efficiency, fuelPrice, insurance, maintenance, depRate, income, otherExpenses
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -892,14 +1046,6 @@ function update() {
 
   // ── Budget at a glance ──
   document.getElementById('rowVehicleName').textContent = data.vehicleName || 'Untitled vehicle';
-  const listingRow = document.getElementById('rowListingRow');
-  const listingLink = document.getElementById('rowListingLink');
-  if (data.listingUrl) {
-    listingRow.style.display = 'flex';
-    listingLink.href = data.listingUrl;
-  } else {
-    listingRow.style.display = 'none';
-  }
   document.getElementById('rowIncome').textContent = fmtD(data.income) + '/mo';
   document.getElementById('rowGlanceCarCost').textContent = fmtD(totalCarCost) + '/mo';
   document.getElementById('rowGlanceOther').textContent = fmtD(data.otherExpenses) + '/mo';
@@ -978,6 +1124,7 @@ document.getElementById('lastUpdated').textContent = 'Updated ' + now.toLocaleDa
 loadData();
 populateForm();
 update();
+loadLookupYears();
 </script>
 </body>
 </html>
