@@ -20,6 +20,8 @@ A client-side mortgage tracker and refinance calculator. Enter your own loan det
 
 The market-rate figures are illustrative starting values (based on Freddie Mac PMMS historical trends) — "today's market rate" is a manual input you keep current yourself. Swap in [FRED's MORTGAGE30US series](https://fred.stlouisfed.org/series/MORTGAGE30US) for the actual current 30-year average.
 
+**Why the notification toggles don't do anything:** the email/SMS/push cards under "Notification settings" are UI only — clicking them doesn't send you anything. Making that real would need a backend: server-side storage for your threshold and contact info (since it has to check even when the page is closed), a scheduled job polling a live rate feed, and third-party services to actually deliver email/SMS/push. That's a deliberate line this project doesn't cross — Rishay Refi is meant to stay a single static file with no server, no database, and nothing about you stored anywhere but your own browser. It's built to be used as a standalone, on-demand check: open it whenever you want to know if refinancing makes sense right now, rather than something that watches rates for you in the background. The notification settings are left in as a sketch of what a "real" version could look like.
+
 ---
 
 ## [Rishay Auto](rishay-auto.html)
